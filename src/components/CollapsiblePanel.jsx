@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { motion } from "motion/react";
 import LocalizedText from "./LocalizedText.jsx";
 import { useI18n } from "../hooks/useI18n.js";
@@ -38,8 +38,19 @@ function CollapsiblePanel({
 }) {
   const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [shouldRenderContent, setShouldRenderContent] = useState(defaultOpen);
+  const [contentRenderKey, setContentRenderKey] = useState(0);
   const panelId = useId();
   const sectionClassName = ["panel", className].filter(Boolean).join(" ");
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    setShouldRenderContent(true);
+    setContentRenderKey((currentKey) => currentKey + 1);
+  }, [isOpen]);
 
   return (
     <motion.section className={sectionClassName} variants={variants ?? fadeUp}>
@@ -82,8 +93,15 @@ function CollapsiblePanel({
         variants={collapseMotion}
         aria-hidden={!isOpen}
         style={{ overflow: "hidden" }}
+        onAnimationComplete={(definition) => {
+          if (definition === "collapsed") {
+            setShouldRenderContent(false);
+          }
+        }}
       >
-        {children}
+        {shouldRenderContent ? (
+          <div key={contentRenderKey}>{children}</div>
+        ) : null}
       </motion.div>
     </motion.section>
   );

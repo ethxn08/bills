@@ -9,16 +9,28 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * DONUT_RADIUS;
 
 function getDonutSegments(items) {
   let offset = 0;
+  let elapsed = 0.1;
 
   return items.map((item) => {
     const segmentLength = (item.percentage / 100) * DONUT_CIRCUMFERENCE;
+    const duration = Math.max(
+      0.28,
+      Math.min(0.62, 0.24 + item.percentage * 0.006),
+    );
     const segment = {
       ...item,
+      segmentLength,
       strokeDasharray: `${segmentLength} ${DONUT_CIRCUMFERENCE - segmentLength}`,
       strokeDashoffset: -offset,
+      transition: {
+        duration,
+        delay: elapsed,
+        ease: "linear",
+      },
     };
 
     offset += segmentLength;
+    elapsed += duration + 0.02;
     return segment;
   });
 }
@@ -57,15 +69,30 @@ function CategoryChart({ items }) {
               r={DONUT_RADIUS}
             />
             {segments.map((item) => (
-              <circle
+              <motion.circle
                 key={item.category}
                 className="category-chart__segment"
                 cx="90"
                 cy="90"
                 r={DONUT_RADIUS}
                 stroke={item.color}
-                strokeDasharray={item.strokeDasharray}
                 strokeDashoffset={item.strokeDashoffset}
+                initial={{
+                  opacity: 0,
+                  strokeDasharray: `0 ${DONUT_CIRCUMFERENCE}`,
+                }}
+                animate={{
+                  opacity: 1,
+                  strokeDasharray: item.strokeDasharray,
+                }}
+                transition={{
+                  strokeDasharray: item.transition,
+                  opacity: {
+                    duration: 0.14,
+                    delay: item.transition.delay,
+                    ease: "easeOut",
+                  },
+                }}
               />
             ))}
           </svg>

@@ -38,12 +38,17 @@ function BarChart({ items }) {
               <strong>{formatCurrency(item.total, language)}</strong>
             </div>
             <div className="bar-track" aria-hidden="true">
-              <div
+              <motion.div
                 className="bar-fill"
                 style={{
-                  width,
                   background:
                     "linear-gradient(90deg, #23404a 0%, #f3a652 100%)",
+                }}
+                initial={{ width: "0%" }}
+                animate={{ width }}
+                transition={{
+                  ...fadeScale.transition,
+                  delay: 0.08 + 0.06 * items.indexOf(item),
                 }}
               />
             </div>

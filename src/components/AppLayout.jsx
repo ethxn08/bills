@@ -13,6 +13,7 @@ import {
 } from "../utils/motion.js";
 import AppSkeleton from "./AppSkeleton.jsx";
 import BottomNav from "./BottomNav.jsx";
+import HeroDonutChart from "./HeroDonutChart.jsx";
 import LocalizedText from "./LocalizedText.jsx";
 
 function AppLayout() {
@@ -35,7 +36,6 @@ function AppLayout() {
     language,
   );
   const hasMonthlyExpenses = metrics.count > 0;
-  const hasMonthlyBudget = metrics.spendingPlan.totalBudget > 0;
 
   if (isHydrating) {
     return <AppSkeleton pathname={location.pathname} />;
@@ -51,19 +51,34 @@ function AppLayout() {
           animate="animate"
         >
           <motion.section className="hero-card" variants={fadeUp}>
-            <motion.div className="hero-card__eyebrow" variants={fadeUp}>
-              <LocalizedText text={t("hero.eyebrow")} width="14ch" />
-            </motion.div>
-            <motion.h1 variants={fadeUp}>
-              <LocalizedText text={t("hero.title")} as="span" width="24ch" />
-            </motion.h1>
-            <motion.p variants={fadeUp}>
-              <LocalizedText
-                text={t("hero.description")}
-                as="span"
-                width="32ch"
-              />
-            </motion.p>
+            <div className="hero-card__layout">
+              <div className="hero-card__copy">
+                {/* <motion.div className="hero-card__eyebrow" variants={fadeUp}>
+                  <LocalizedText text={t("hero.eyebrow")} width="14ch" />
+                </motion.div> */}
+                <motion.h1 variants={fadeUp}>
+                  <LocalizedText
+                    text={t("hero.title")}
+                    as="span"
+                    width="24ch"
+                  />
+                </motion.h1>
+                <motion.p variants={fadeUp}>
+                  <LocalizedText
+                    text={t("hero.description")}
+                    as="span"
+                    width="32ch"
+                  />
+                </motion.p>
+              </div>
+
+              <motion.div className="hero-card__visual" variants={fadeUp}>
+                <HeroDonutChart
+                  items={metrics.categoryBreakdown}
+                  total={metrics.total}
+                />
+              </motion.div>
+            </div>
 
             <motion.div className="hero-card__stats" variants={quickStagger}>
               <motion.div className="hero-stat" variants={fadeUp}>
@@ -87,22 +102,6 @@ function AppLayout() {
                 <strong>
                   {hasMonthlyExpenses
                     ? formatCurrency(metrics.average, language)
-                    : "-"}
-                </strong>
-              </motion.div>
-              <motion.div className="hero-stat" variants={fadeUp}>
-                <LocalizedText text={t("hero.dominantCategory")} />
-                <strong>
-                  <LocalizedText
-                    text={metrics.topCategory ? metrics.topCategory.label : "-"}
-                  />
-                </strong>
-              </motion.div>
-              <motion.div className="hero-stat" variants={fadeUp}>
-                <LocalizedText text={t("hero.monthBudget")} />
-                <strong>
-                  {hasMonthlyBudget
-                    ? formatCurrency(metrics.spendingPlan.totalBudget, language)
                     : "-"}
                 </strong>
               </motion.div>

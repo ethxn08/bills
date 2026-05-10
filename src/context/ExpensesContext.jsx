@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ExpensesContext } from "./expensesContextObject.js";
 import { getCurrentMonthKey } from "../utils/date.js";
+import {
+  createStandaloneExpense,
+  excludeOccurrence,
+  expandRecurringExpenses,
+  findRecurringOccurrence,
+  normalizeExpense,
+} from "../utils/recurringExpenses.js";
 
 const STORAGE_KEY = "bills.expenses";
 const BUDGETS_STORAGE_KEY = "bills.budgets";
@@ -64,7 +71,7 @@ function getInitialLanguage() {
 }
 
 export function ExpensesProvider({ children }) {
-  const [expenses, setExpenses] = useState([]);
+  const [storedExpenses, setStoredExpenses] = useState([]);
   const [budgets, setBudgets] = useState({});
   const [language, setLanguageState] = useState("es");
   const [warningThreshold, setWarningThreshold] = useState(85);
@@ -80,7 +87,7 @@ export function ExpensesProvider({ children }) {
     const nextLanguage = getInitialLanguage();
     const nextWarningThreshold = getInitialWarningThreshold();
     const hydrationDelay = window.setTimeout(() => {
-      setExpenses(nextExpenses);
+      setStoredExpenses(nextExpenses.map(normalizeExpense));
       setBudgets(nextBudgets);
       setLanguageState(nextLanguage);
       setWarningThreshold(nextWarningThreshold);
@@ -97,8 +104,8 @@ export function ExpensesProvider({ children }) {
       return;
     }
 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
-  }, [expenses, isHydrating]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(storedExpenses));
+  }, [storedExpenses, isHydrating]);
 
   useEffect(() => {
     if (isHydrating) {
@@ -156,6 +163,11 @@ export function ExpensesProvider({ children }) {
     );
   }, [isHydrating, warningThreshold]);
 
+  const expenses = useMemo(
+    () => expandRecurringExpenses(storedExpenses),
+    [storedExpenses],
+  );
+
   const value = useMemo(
     () => ({
       expenses,
@@ -169,21 +181,63 @@ export function ExpensesProvider({ children }) {
       setSelectedMonth,
       setWarningThreshold,
       addExpense: (expense) => {
-        setExpenses((currentExpenses) => [expense, ...currentExpenses]);
+        setStoredExpenses((currentExpenses) => [
+          normalizeExpense(expense),
+          ...currentExpenses,
+        ]);
       },
       updateExpense: (expenseId, updatedExpense) => {
-        setExpenses((currentExpenses) =>
-          currentExpenses.map((expense) =>
-            expense.id === expenseId
-              ? { ...expense, ...updatedExpense }
-              : expense,
-          ),
-        );
+        setStoredExpenses((currentExpenses) => {
+          const normalizedExpenses = currentExpenses.map(normalizeExpense);
+          const recurringOccurrence = findRecurringOccurrence(
+            normalizedExpenses,
+            expenseId,
+          );
+
+          if (!recurringOccurrence) {
+            return normalizedExpenses.map((expense) =>
+              expense.id === expenseId
+                ? normalizeExpense({ ...expense, ...updatedExpense })
+                : expense,
+            );
+          }
+
+          const { sourceExpenseId, occurrenceDate } = recurringOccurrence;
+
+          return normalizedExpenses.flatMap((expense) => {
+            if (expense.id !== sourceExpenseId) {
+              return [expense];
+            }
+
+            return [
+              createStandaloneExpense(updatedExpense, occurrenceDate),
+              excludeOccurrence(expense, occurrenceDate),
+            ];
+          });
+        });
       },
       deleteExpense: (expenseId) => {
-        setExpenses((currentExpenses) =>
-          currentExpenses.filter((expense) => expense.id !== expenseId),
-        );
+        setStoredExpenses((currentExpenses) => {
+          const normalizedExpenses = currentExpenses.map(normalizeExpense);
+          const recurringOccurrence = findRecurringOccurrence(
+            normalizedExpenses,
+            expenseId,
+          );
+
+          if (!recurringOccurrence) {
+            return normalizedExpenses.filter(
+              (expense) => expense.id !== expenseId,
+            );
+          }
+
+          const { sourceExpenseId, occurrenceDate } = recurringOccurrence;
+
+          return normalizedExpenses.map((expense) =>
+            expense.id === sourceExpenseId
+              ? excludeOccurrence(expense, occurrenceDate)
+              : expense,
+          );
+        });
       },
       setMonthlyBudget: (monthKey, category, amount) => {
         setBudgets((currentBudgets) => ({
@@ -203,6 +257,7 @@ export function ExpensesProvider({ children }) {
       language,
       setLanguage,
       selectedMonth,
+      storedExpenses,
       warningThreshold,
     ],
   );

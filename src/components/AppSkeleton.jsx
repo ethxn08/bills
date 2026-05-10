@@ -179,18 +179,31 @@ function AppSkeleton({ pathname }) {
       <main className="app-shell__content">
         <header className="app-shell__header">
           <section className="hero-card skeleton-hero-card">
-            <SkeletonTextGroup
-              lines={[
-                "skeleton-line skeleton-line--eyebrow",
-                "skeleton-line skeleton-line--hero",
-                "skeleton-line skeleton-line--hero-short",
-                "skeleton-line skeleton-line--medium",
-              ]}
-            />
+            <div className="hero-card__layout skeleton-hero-layout">
+              <div className="hero-card__copy skeleton-hero-copy">
+                <SkeletonTextGroup
+                  lines={[
+                    "skeleton-line skeleton-line--hero",
+                    "skeleton-line skeleton-line--hero-short",
+                    "skeleton-line skeleton-line--medium",
+                    "skeleton-line skeleton-line--medium skeleton-line--hero-copy-short",
+                  ]}
+                />
+              </div>
+
+              <div
+                className="hero-card__visual skeleton-hero-visual"
+                aria-hidden="true"
+              >
+                <SkeletonBlock className="skeleton-donut" />
+                <div className="skeleton-hero-summary">
+                  <SkeletonBlock className="skeleton-hero-pill skeleton-hero-pill--primary" />
+                  <SkeletonBlock className="skeleton-hero-pill skeleton-hero-pill--secondary" />
+                </div>
+              </div>
+            </div>
 
             <div className="hero-card__stats" aria-hidden="true">
-              <SkeletonBlock className="skeleton-stat-card" />
-              <SkeletonBlock className="skeleton-stat-card" />
               <SkeletonBlock className="skeleton-stat-card" />
               <SkeletonBlock className="skeleton-stat-card" />
               <SkeletonBlock className="skeleton-stat-card" />
