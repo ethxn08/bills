@@ -11,6 +11,7 @@ const initialFormState = {
   amount: "",
   category: "vivienda",
   date: `${getCurrentMonthKey()}-01`,
+  repeat: "never",
   note: "",
 };
 
@@ -24,6 +25,7 @@ function getFormState(initialValues) {
     amount: String(initialValues.amount),
     category: initialValues.category,
     date: initialValues.date,
+    repeat: initialValues.repeat ?? "never",
     note: initialValues.note,
   };
 }
@@ -31,6 +33,12 @@ function getFormState(initialValues) {
 function ExpenseForm({ initialValues, onCancel, onSubmit, submitLabel }) {
   const { language, t } = useI18n();
   const categories = getLocalizedCategories(language);
+  const repeatOptions = [
+    { value: "never", label: t("expenseForm.repeatNever") },
+    { value: "daily", label: t("expenseForm.repeatDaily") },
+    { value: "weekly", label: t("expenseForm.repeatWeekly") },
+    { value: "monthly", label: t("expenseForm.repeatMonthly") },
+  ];
   const [formState, setFormState] = useState(() => getFormState(initialValues));
 
   function handleChange(event) {
@@ -55,6 +63,7 @@ function ExpenseForm({ initialValues, onCancel, onSubmit, submitLabel }) {
       amount: Number(formState.amount),
       category: formState.category,
       date: formState.date,
+      repeat: formState.repeat,
       note: formState.note.trim(),
     });
 
@@ -130,6 +139,16 @@ function ExpenseForm({ initialValues, onCancel, onSubmit, submitLabel }) {
             value={formState.date}
             onChange={handleChange}
             required
+          />
+        </motion.div>
+
+        <motion.div className="field" variants={fadeUp}>
+          <AppSelect
+            id="repeat"
+            label={t("expenseForm.repeat")}
+            value={formState.repeat}
+            onChange={(nextValue) => updateField("repeat", nextValue)}
+            options={repeatOptions}
           />
         </motion.div>
 
