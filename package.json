@@ -11,12 +11,16 @@
     "cap:build": "npm run build && npx cap sync",
     "cap:copy": "npx cap copy",
     "cap:sync": "npx cap sync",
+    "cap:add:ios": "npx cap add ios",
+    "cap:sync:ios": "npx cap sync ios",
+    "cap:ios": "npx cap open ios",
     "cap:android": "npx cap open android",
     "apk:debug": "npm run cap:build && cd android && gradlew.bat assembleDebug"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.3",
     "@capacitor/core": "^8.3.3",
+    "@capacitor/ios": "^8.3.3",
     "motion": "^12.38.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
